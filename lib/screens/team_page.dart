@@ -92,52 +92,55 @@ class _TeamPageState extends State<TeamPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : errorMessage.isNotEmpty
-          ? Center(
-        child: Text(
-          'Error: $errorMessage',
-          style: const TextStyle(color: Colors.red),
-        ),
-      )
-          : ListView.builder(
-        itemCount: teams.length,
-        itemBuilder: (context, index) {
-          return Container(
-            color: index % 2 == 0 ? Colors.grey : null, // Set color for even rows
-            child: ListTile(
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Text(teams[index]['name']),
-                  Text(teams[index]['type']),
-                ],
-              ),
-              leading: Text(teams[index]['id']),
-              trailing: IconButton(
-                icon: const Icon(Icons.edit),
-                tooltip: 'تعديل',
-                onPressed: () {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        body: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : errorMessage.isNotEmpty
+            ? Center(
+          child: Text(
+            'Error: $errorMessage',
+            style: const TextStyle(color: Colors.red),
+          ),
+        )
+            : ListView.builder(
+          itemCount: teams.length,
+          itemBuilder: (context, index) {
+            return Container(
+              color: index % 2 == 0 ? Colors.black12 : null, // Set color for even rows
+              child: ListTile(
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Text(teams[index]['name']),
+                    Text(teams[index]['type']),
+                  ],
+                ),
+                leading: Text(teams[index]['id']),
+                trailing: IconButton(
+                  icon: const Icon(Icons.edit),
+                  tooltip: 'تعديل',
+                  onPressed: () {
 
-                  _showEditTeamDialog(
-                    int.parse(teams[index]['id']),
-                    teams[index]['name'],
-                    teams[index]['type'],
-                  );
-                },
+                    _showEditTeamDialog(
+                      int.parse(teams[index]['id']),
+                      teams[index]['name'],
+                      teams[index]['type'],
+                    );
+                  },
+                ),
               ),
-            ),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        tooltip: 'اضافة فريق',
-        onPressed: () {
-          _showAddTeamDialog();
-        },
-        child: const Icon(Icons.add),
+            );
+          },
+        ),
+        floatingActionButton: FloatingActionButton(
+          tooltip: 'اضافة فريق',
+          onPressed: () {
+            _showAddTeamDialog();
+          },
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }
@@ -150,17 +153,17 @@ class _TeamPageState extends State<TeamPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Add Team'),
+          title: const Text('إنشاء فريق جديد'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
+                decoration: const InputDecoration(labelText: 'الإسم'),
               ),
               TextField(
                 controller: typeController,
-                decoration: const InputDecoration(labelText: 'Type'),
+                decoration: const InputDecoration(labelText: 'النوع'),
               ),
             ],
           ),
@@ -169,13 +172,13 @@ class _TeamPageState extends State<TeamPage> {
               onPressed: () {
                 _addTeam(nameController.text, typeController.text);
               },
-              child: const Text('Submit'),
+              child: const Text('حفظ'),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(context); // Close the dialog
               },
-              child: const Text('Cancel'),
+              child: const Text('إلغاء'),
             ),
           ],
         );
@@ -191,32 +194,36 @@ class _TeamPageState extends State<TeamPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Edit Team'),
+
+          title: const Center(child: Text('تعديل بيانات الفريق')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               TextField(
+                textDirection: TextDirection.rtl,
                 controller: nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
+                decoration: const InputDecoration(labelText: 'الإسم',),
               ),
               TextField(
+                textDirection: TextDirection.rtl,
                 controller: typeController,
-                decoration: const InputDecoration(labelText: 'Type'),
+                decoration: const InputDecoration(labelText: 'النوع'),
               ),
             ],
           ),
           actions: [
-            ElevatedButton(
-              onPressed: () {
-                _submitEditTeam(teamId, nameController.text, typeController.text);
-              },
-              child: Text('Submit'),
-            ),
             TextButton(
               onPressed: () {
                 Navigator.pop(context); // Close the dialog
               },
-              child: Text('Cancel'),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                _submitEditTeam(teamId, nameController.text, typeController.text);
+              },
+              child: const Text('حفظ'),
             ),
           ],
         );

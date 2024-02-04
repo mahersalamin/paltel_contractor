@@ -1,11 +1,9 @@
 import 'dart:io';
-
 import 'package:desktop/screens/team_materials_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' as intl;
 
 class RegMaterialsTeam extends StatefulWidget {
   const RegMaterialsTeam({Key? key}) : super(key: key);
@@ -220,204 +218,215 @@ class _RegMaterialsTeamState extends State<RegMaterialsTeam> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.black26,
-        title: const Text('تسجيل المواد على الفرق'),
-        centerTitle: true,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(50.0),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.vertical,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  SizedBox(
-                    width: 150,
-                    child: DropdownButton<String>(
-                      icon: const Icon(Icons.arrow_downward_outlined),
-                      value: selectedOption,
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          selectedOption = newValue!;
-                        });
-                      },
-                      items: _buildDropdownItems(),
-                    ),
-                  ),
-                  SizedBox(
-                    width: 200,
-                    child: TextFormField(
-                      controller: dateController,
-                      decoration: InputDecoration(
-                        labelText: 'حدد التاريخ',
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.calendar_today),
-                          onPressed: () async {
-                            DateTime? pickedDate = await showDatePicker(
-                              helpText: 'التاريخ',
-                              cancelText: 'إلغاء',
-                              confirmText: 'تأكيد',
-                              context: context,
-                              initialDate: DateTime.now(),
-                              firstDate: DateTime(2000),
-                              lastDate: DateTime.now(),
-                            );
-
-                            if (pickedDate != null) {
-                              dateController.text =
-                                  DateFormat('yyyy-MM-dd').format(pickedDate);
-                            }
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.black26,
+          title: const Text('تسجيل المواد على الفرق'),
+          centerTitle: true,
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(50.0),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Directionality(
+                      textDirection: TextDirection.rtl,
+                      child: SizedBox(
+                        width: 150,
+                        child: DropdownButton<String>(
+                          hint: const Text('الفرقة'),
+                          icon: const Icon(Icons.arrow_downward_outlined),
+                          value: selectedOption,
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              selectedOption = newValue!;
+                            });
                           },
+                          items: _buildDropdownItems(),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              const Text('المواد:'),
-              const SizedBox(height: 20),
-              const SizedBox(height: 20),
-              ListView.builder(
-                shrinkWrap: true,
-                itemCount: textControllers.length,
-                itemBuilder: (BuildContext context, int index) {
-                  // Ensure the index is within bounds
-                  if (index < textControllers.length) {
-                    final TextEditingController nameController =
-                        textControllers[index];
-                    final TextEditingController quantityController =
-                        quantityControllers[index];
-                    int availableQuantity = 0; // Default value
-
-                    // Find the material with the corresponding name
-                    Map<String, dynamic>? selectedMaterial =
-                        materials.firstWhere(
-                      (material) => material['name'] == nameController.text,
-                      orElse: () => {'name': 'not found'},
-                    );
-
-                    selectedMaterial['name'] == 'not found'
-                        ? availableQuantity = 0
-                        : availableQuantity =
-                            int.parse(selectedMaterial['quantity']);
-
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: MaterialNameAutocomplete(
-                            materialNames: materialNames,
-                            onSelected: (String selection) {
-                              nameController.text = selection;
-
-                              // Update available quantity when a material is selected
-                              Map<String, dynamic>? selectedMaterial =
-                                  materials.firstWhere(
-                                (material) => material['name'] == selection,
-                                orElse: () => {'name': 'empty'},
+                    SizedBox(
+                      width: 200,
+                      child: TextFormField(
+                        controller: dateController,
+                        decoration: InputDecoration(
+                          labelText: 'حدد التاريخ',
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.calendar_today),
+                            onPressed: () async {
+                              DateTime? pickedDate = await showDatePicker(
+                                helpText: 'التاريخ',
+                                cancelText: 'إلغاء',
+                                confirmText: 'تأكيد',
+                                context: context,
+                                initialDate: DateTime.now(),
+                                firstDate: DateTime(2000),
+                                lastDate: DateTime.now(),
                               );
 
-                              setState(() {
-                                availableQuantity =
-                                    int.parse(selectedMaterial['quantity']);
-                              });
+                              if (pickedDate != null) {
+                                dateController.text =
+                                    intl.DateFormat('yyyy-MM-dd').format(pickedDate);
+                              }
                             },
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          width: 300,
-                          child: TextField(
-                            controller: quantityController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: 'الكمية',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const Text('المواد:'),
+                const SizedBox(height: 20),
+                const SizedBox(height: 20),
+                ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: textControllers.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    // Ensure the index is within bounds
+                    if (index < textControllers.length) {
+                      final TextEditingController nameController =
+                          textControllers[index];
+                      final TextEditingController quantityController =
+                          quantityControllers[index];
+                      int availableQuantity = 0; // Default value
+
+                      // Find the material with the corresponding name
+                      Map<String, dynamic>? selectedMaterial =
+                          materials.firstWhere(
+                        (material) => material['name'] == nameController.text,
+                        orElse: () => {'name': 'not found'},
+                      );
+
+                      selectedMaterial['name'] == 'not found'
+                          ? availableQuantity = 0
+                          : availableQuantity =
+                              int.parse(selectedMaterial['quantity']);
+
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: MaterialNameAutocomplete(
+                              materialNames: materialNames,
+                              onSelected: (String selection) {
+                                nameController.text = selection;
+
+                                // Update available quantity when a material is selected
+                                Map<String, dynamic>? selectedMaterial =
+                                    materials.firstWhere(
+                                  (material) => material['name'] == selection,
+                                  orElse: () => {'name': 'empty'},
+                                );
+
+                                setState(() {
+                                  availableQuantity =
+                                      int.parse(selectedMaterial['quantity']);
+                                });
+                              },
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          width: 180,
-                          child: Text(
-                            'الكمية المتاحة: $availableQuantity',
-                            style: TextStyle(
-                                color: availableQuantity > 0
-                                    ? Colors.green
-                                    : Colors.red),
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            width: 300,
+                            child: TextField(
+                              controller: quantityController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: 'الكمية',
+                              ),
+                            ),
                           ),
-                        ),
-                        // const SizedBox(width: 30),
-                      ],
-                    );
-                  } else {
-                    // Handle the case where the index is out of bounds (optional)
-                    return Container();
-                  }
-                },
-              ),
-              const SizedBox(height: 20),
-            ],
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            width: 180,
+                            child: Text(
+                              'الكمية المتاحة: $availableQuantity',
+                              style: TextStyle(
+                                  color: availableQuantity > 0
+                                      ? Colors.green
+                                      : Colors.red),
+                            ),
+                          ),
+                          // const SizedBox(width: 30),
+                        ],
+                      );
+                    } else {
+                      // Handle the case where the index is out of bounds (optional)
+                      return Container();
+                    }
+                  },
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
-      ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              FloatingActionButton(
-                heroTag: 'عرض مواد',
-                tooltip: 'عرض مواد الفريق',
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            TeamMaterialsPage(team_id: selectedOption)),
-                  );
-                },
-                child: const Icon(Icons.list),
-              ),
-              FloatingActionButton(
-                heroTag: 'اضافة مادة',
-                tooltip: 'اضافة مادة',
-                onPressed: _addNewRow,
-                child: const Icon(Icons.add),
-              ),
-              FloatingActionButton(
-                heroTag: 'حفظ',
-                tooltip: 'حفظ',
-                onPressed: () {
-                  if (textControllers.isNotEmpty &&
-                      quantityControllers.isNotEmpty) {
-                    _saveTeamMaterials(textControllers, quantityControllers);
-                  } else {
-                    const snackBar = SnackBar(
-                      showCloseIcon: true,
-                      backgroundColor: Colors.black,
-                      content: Text(
-                        'لا توجد مواد لإضافتها!',
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+        floatingActionButton: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                FloatingActionButton(
+                  heroTag: 'عرض مواد',
+                  tooltip: 'عرض مواد الفريق',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              TeamMaterialsPage(team_id: selectedOption)),
                     );
+                  },
+                  child: const Icon(Icons.list),
+                ),
+                FloatingActionButton(
+                  heroTag: 'اضافة مادة',
+                  tooltip: 'اضافة مادة',
+                  onPressed: _addNewRow,
+                  child: const Icon(Icons.add),
+                ),
+                FloatingActionButton(
+                  heroTag: 'حفظ',
+                  tooltip: 'حفظ',
+                  onPressed: () {
+                    if (textControllers.isNotEmpty &&
+                        quantityControllers.isNotEmpty) {
 
-                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                  }
-                },
-                child: const Icon(Icons.save),
-              )
-            ],
-          ),
-        ],
+                      _saveTeamMaterials(textControllers, quantityControllers);
+                      setState(() {
+                        _fetchMaterialsData();
+                      });
+                    } else {
+                      const snackBar = SnackBar(
+                        showCloseIcon: true,
+                        backgroundColor: Colors.black,
+                        content: Text(
+                          'لا توجد مواد لإضافتها!',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      );
+
+                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                    }
+                  },
+                  child: const Icon(Icons.save),
+                )
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -426,7 +435,7 @@ class _RegMaterialsTeamState extends State<RegMaterialsTeam> {
     return teams.map((team) {
       return DropdownMenuItem<String>(
         value: team['id'].toString(),
-        child: Text(team['name']),
+        child: Center(child: Text(team['name'],textDirection: TextDirection.rtl)),
       );
     }).toList();
   }

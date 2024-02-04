@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' as intl;
 
 class TeamMaterialsPage extends StatefulWidget {
   final String team_id;
@@ -15,11 +15,14 @@ class TeamMaterialsPage extends StatefulWidget {
 
 class _TeamMaterialsPageState extends State<TeamMaterialsPage> {
   final Uri uri = Uri.parse('http://127.0.0.1/atta/team_materials.php');
+  final Uri teamMaterialsUri = Uri.parse('http://127.0.0.1/atta/team_materials_logs.php');
   bool isLoading = true;
   String errorMessage = '';
   List<Map<String, dynamic>> materials = [];
   List<TextEditingController> controllers = [];
-  final Uri teamMaterialsUri = Uri.parse('http://127.0.0.1/atta/team_materials_logs.php');
+  Map<String, dynamic> logMaterials = {};
+  dynamic generalRow;
+  dynamic generalMatRow;
 
   Future<void> _loadMaterials() async {
     try {
@@ -57,12 +60,49 @@ class _TeamMaterialsPageState extends State<TeamMaterialsPage> {
       });
     }
   }
+  Future<void> _loadTeamLog() async {
+    try {
+      final response = await http.post(
+        teamMaterialsUri,
+        body: {'action': 'view', 'team_id': widget.team_id},
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+
+        if (jsonData['status'] == 'success') {
+          setState(() {
+            logMaterials = jsonData['data'];
+            isLoading = false;
+          });
+        } else {
+          setState(() {
+            isLoading = false;
+            errorMessage = jsonData['message'];
+          });
+        }
+      } else {
+        // Handle network error
+        setState(() {
+          isLoading = false;
+          errorMessage = 'Network error: ${response.statusCode}';
+        });
+      }
+    } catch (error) {
+      // Handle other errors
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Error: $error';
+      });
+    }
+  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     _loadMaterials();
+    _loadTeamLog();
     controllers = materials.map((material) {
       return TextEditingController(text: material['used_quantity'].toString());
     }).toList();
@@ -73,68 +113,139 @@ class _TeamMaterialsPageState extends State<TeamMaterialsPage> {
     Map<String, List<Map<String, dynamic>>> groupedMaterials =
         groupMaterialsByDate(materials);
 
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text(
-          'سجل استلامات الفريق'
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          title: const Text(
+            'سجل استلامات وأشغال الفريق'
+          ),
         ),
-      ),
-      body: ListView.builder(
-        itemCount: groupedMaterials.keys.length,
-        itemBuilder: (BuildContext context, int index) {
-          String dateTaken = groupedMaterials.keys.elementAt(index);
-          List<Map<String, dynamic>> groupedRows = groupedMaterials[dateTaken]!;
+        body: Row(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                itemCount: groupedMaterials.keys.length,
+                itemBuilder: (BuildContext context, int index) {
+                  String dateTaken = groupedMaterials.keys.elementAt(index);
+                  List<Map<String, dynamic>> groupedRows = groupedMaterials[dateTaken]!;
 
-          return ExpansionTile(
-            collapsedBackgroundColor: Colors.white,
-            tilePadding: const EdgeInsets.symmetric(vertical: 10),
-            trailing: IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () {
-                // print(groupedMaterials[dateTaken]);
-                _showEditMaterialDialog(groupedMaterials[dateTaken]!);
-              },
-            ),
-            title: Container(
-              color: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(' $dateTaken'),
-            ),
-            children: [
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: groupedRows.length,
-                itemBuilder: (BuildContext context, int childIndex) {
-                  Map<String, dynamic> row = groupedRows[childIndex];
-                  return Container(
-                    color: index % 2 == 0 ? Colors.black26 : Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 350,
-                          child: Text(' ${row['material_name']}'),
-                        ),
-                        SizedBox(
-                          width: 350,
-                          child: Text(' ${row['stock_quantity']}'),
-                        ),
-                        SizedBox(
-                          width: 100,
-                          child: Text(' ${row['quantity']}'),
-                        ),
-                      ],
+                  return ExpansionTile(
+                    initiallyExpanded: true,
+                    collapsedBackgroundColor: Colors.white,
+                    tilePadding: const EdgeInsets.symmetric(vertical: 10),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () {
+                        _showEditMaterialDialog(groupedMaterials[dateTaken]!);
+                      },
                     ),
+                    title: Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(' $dateTaken'),
+                    ),
+                    children: [
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: groupedRows.length,
+                        itemBuilder: (BuildContext context, int childIndex) {
+                          Map<String, dynamic> row = groupedRows[childIndex];
+
+                          return Container(
+                            color: index % 2 == 0 ? Colors.black26 : Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 100,
+                                  child: Text(' ${row['material_name']}'),
+                                ),
+                                SizedBox(
+                                  width: 100,
+                                  child: Text(' ${row['transaction_type']}'),
+                                ),
+                                SizedBox(
+                                  width: 100,
+                                  child: Text('المأخوذ ${row['quantity']}'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   );
                 },
               ),
-            ],
-          );
-        },
+            ),
+            const SizedBox(width: 40,),
+            Expanded(
+              child: ListView.builder(
+                itemCount: logMaterials.length,
+                itemBuilder: (BuildContext context, int index) {
+                  String materialTakenName = logMaterials.keys.elementAt(index);
+                  List<dynamic> groupedMatRows = logMaterials[materialTakenName]!;
+
+                  return ExpansionTile(
+                    initiallyExpanded: true,
+                    collapsedBackgroundColor: Colors.white,
+                    tilePadding: const EdgeInsets.symmetric(vertical: 10),
+                    title: Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(materialTakenName),
+                    ),
+                    children: [
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: groupedMatRows.length,
+                        itemBuilder: (BuildContext context, int childIndex) {
+                          Map<String, dynamic> matRow = groupedMatRows[childIndex];
+                          return Container(
+                            color: index % 2 == 0 ? Colors.black26 : Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 100,
+                                  child: Text('المستلم: ${matRow['team_material_quantity']}'),
+                                ),
+                                SizedBox(
+                                  width: 100,
+                                  child: Text('المستخدم ${matRow['used_quantity']}'),
+                                ),
+                                SizedBox(
+                                  width: 100,
+                                  child: Text('المتبقي ${matRow['remaining_quantity']}'),
+                                ),
+                                SizedBox(
+                                  width: 100,
+                                  child: Text('تاريخ الاستلام ${matRow['date_taken']}'),
+                                ),
+                                SizedBox(
+                                  width: 100,
+                                  child: Text('تاريخ الاستخدام ${matRow['date_used']}'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  );
+                },
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -226,7 +337,7 @@ class _TeamMaterialsPageState extends State<TeamMaterialsPage> {
 
                               if (pickedDate != null) {
                                 dateControllers[i].text =
-                                    DateFormat('yyyy-MM-dd').format(pickedDate);
+                                    intl.DateFormat('yyyy-MM-dd').format(pickedDate);
                               }
                             },
                           ),
@@ -307,7 +418,6 @@ class _TeamMaterialsPageState extends State<TeamMaterialsPage> {
   }
 
   Future<void> saveLog(List<Map<String, dynamic>> savedMaterials) async {
-    // print(jsonEncode(savedMaterials));
     try {
       final response = await http.post(
         teamMaterialsUri,
@@ -324,14 +434,17 @@ class _TeamMaterialsPageState extends State<TeamMaterialsPage> {
         if (jsonData['status'] == 'success') {
           // Handle success
           // Navigator.pop(context);
-          _loadMaterials();
+          setState(() {
+            _loadMaterials();
+            _loadTeamLog();
+          });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(jsonData['message']),
               duration: const Duration(seconds: 2),
             ),
           );
-          print('Log added successfully');
+
         } else {
           // Handle error
           ScaffoldMessenger.of(context).showSnackBar(

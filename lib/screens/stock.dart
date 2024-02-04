@@ -62,22 +62,27 @@ class _StockState extends State<Stock> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('المستودع'),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            tooltip: "اضافة مادة",
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              _showAddMaterialDialog();
-            },
-          ),
-        ],
-        backgroundColor: Colors.black12,
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(
+
+          title: const Text('المستودع'),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              tooltip: "اضافة مادة",
+              icon: const Icon(Icons.add),
+
+              onPressed: () {
+                _showAddMaterialDialog();
+              },
+            ),
+          ],
+          backgroundColor: Colors.greenAccent,
+        ),
+        body: _buildMaterialList(),
       ),
-      body: _buildMaterialList(),
     );
   }
 
@@ -296,54 +301,57 @@ class _StockState extends State<Stock> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('تعديل المادة'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'الاسم'),
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            title: const Text('تعديل المادة'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'الاسم'),
+                ),
+                TextField(
+                  controller: nameEngController,
+                  decoration:
+                      const InputDecoration(labelText: 'الاسم بالانجليزي'),
+                ),
+                TextField(
+                  controller: paltelIDController,
+                  decoration: const InputDecoration(labelText: 'الرقم التسلسلي'),
+                ),
+                TextField(
+                  controller: quantityController,
+                  decoration: const InputDecoration(labelText: 'الكمية'),
+                ),
+                TextField(
+                  controller: typeController,
+                  decoration: const InputDecoration(labelText: 'الوحدة'),
+                ),
+              ],
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  _editMaterial(
+                      material,
+                      nameController.text,
+                      quantityController.text,
+                      nameEngController.text,
+                      paltelIDController.text,
+                      typeController.text);
+                },
+                child: const Text('حفظ'),
               ),
-              TextField(
-                controller: nameEngController,
-                decoration:
-                    const InputDecoration(labelText: 'الاسم بالانجليزي'),
-              ),
-              TextField(
-                controller: paltelIDController,
-                decoration: const InputDecoration(labelText: 'الرقم التسلسلي'),
-              ),
-              TextField(
-                controller: quantityController,
-                decoration: const InputDecoration(labelText: 'الكمية'),
-              ),
-              TextField(
-                controller: typeController,
-                decoration: const InputDecoration(labelText: 'الوحدة'),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // Close the edit material dialog
+                },
+                child: const Text('إلغاء'),
               ),
             ],
           ),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                _editMaterial(
-                    material,
-                    nameController.text,
-                    quantityController.text,
-                    nameEngController.text,
-                    paltelIDController.text,
-                    typeController.text);
-              },
-              child: const Text('حفظ'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Close the edit material dialog
-              },
-              child: const Text('إلغاء'),
-            ),
-          ],
         );
       },
     );

@@ -3,8 +3,6 @@ import 'package:desktop/screens/teams_screen.dart';
 import 'package:desktop/screens/register_materials_team.dart';
 import 'package:flutter/material.dart';
 
-
-
 void main() {
   runApp(const MyApp());
 }
@@ -20,12 +18,10 @@ class _MyAppState extends State<MyApp> {
   // This widget is the root of your application.
 
   @override
-  initState()  {
+  initState() {
     // TODO: implement initState
     super.initState();
-
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -33,11 +29,12 @@ class _MyAppState extends State<MyApp> {
       title: 'المستودع',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'المستودع الافتراضي'),
+      home: const Directionality(
+          textDirection: TextDirection.rtl,
+          child: MyHomePage(title: 'المستودع الافتراضي')),
     );
   }
 }
@@ -52,9 +49,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,37 +62,34 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
             ElevatedButton(
-                onPressed: (){
+                onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) =>  TeamsScreen()),
+                    MaterialPageRoute(builder: (context) => TeamsScreen()),
                   );
                 },
-                child: const Text('الفرق')
-            ),
-
+                child: const Text('الفرق')),
             ElevatedButton(
-                onPressed: (){
+                onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const Stock()),
                   );
                 },
-                child: const Text('المستودع')
-            ),
+                child: const Text('المستودع')),
             ElevatedButton(
-                onPressed: (){
+                onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const RegMaterialsTeam()),
+                    MaterialPageRoute(
+                        builder: (context) => const RegMaterialsTeam()),
                   );
                 },
-                child: const Text('تسجيل مواد على فريق')
-            )
+                child: const Text('تسجيل مواد على فريق'))
           ],
         ),
       ),
-     // This trailing comma makes auto-formatting nicer for build methods.
+      // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
