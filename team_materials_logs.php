@@ -3,35 +3,62 @@
 include('db_connection.php');
 
 // Function to add a new material
-function addLog()
-{
-
+function addLog(){
     global $conn;
-    if (isset($_POST['team_material_id'], $_POST['used_quantity'], $_POST['used_date'])) {
 
-        $teamMaterialId = $_POST['team_material_id'];
-        $usedQuantity = $_POST['used_quantity'];
-// Insert a record into material_usage_logs
-        $dateUsed = date("dd-mm-yyyy");
-        $insertLogQuery = "INSERT INTO material_usage_logs (team_material_id, used_quantity, date_used) 
-                  VALUES ('$teamMaterialId', '$usedQuantity', '$dateUsed')";
+    if (isset($_POST['data'])) {
+        $data = json_decode($_POST['data'], true);
+        $teamId = $_POST['team_id'];
 
-        // Update the remaining quantity in team_materials
-        $updateRemainingQuantityQuery = "UPDATE team_materials 
-                                 SET remaining_quantity = remaining_quantity - '$usedQuantity' 
-                                 WHERE id = '$teamMaterialId'";
-        mysqli_query($conn, $updateRemainingQuantityQuery);
+        foreach ($data as $log) {
+            $teamMaterialId = $log['id'];
+            $materialName = $log['material_name'];
+            $usedQuantity = $log['used_quantity'];
+            $dateTaken = $log['date_taken'];
+            $dateUsed = $log['used_date'];
 
+            // Check if used_quantity is greater than 0
+            if ($usedQuantity > 0) {
+                // Check if used_quantity is less than or equal to remaining_quantity
+                $selectRemainingQuery = "SELECT remaining_quantity FROM team_materials 
+                                         WHERE id = '$teamMaterialId' AND date_taken = '$dateTaken'";
+                $result = mysqli_query($conn, $selectRemainingQuery);
 
-        if ($conn->query($insertLogQuery) === TRUE && $conn->query($updateRemainingQuantityQuery) === TRUE) {
-            echo json_encode(array('status' => 'success', 'message' => 'Log added successfully'));
-        } else {
-            echo json_encode(array('status' => 'error', 'message' => 'Error adding Log: ' . $conn->error));
+                if ($result) {
+                    $row = mysqli_fetch_assoc($result);
+                    $remainingQuantity = $row['remaining_quantity'];
+
+                    if ($usedQuantity <= $remainingQuantity) {
+                        // Insert a record into material_usage_logs
+                        $insertLogQuery = "INSERT INTO material_usage_logs (team_material_id, team_id, used_quantity, date_used, date_taken) 
+                                           VALUES ('$teamMaterialId', $teamId, '$usedQuantity', '$dateUsed', '$dateTaken')";
+
+                        $updateRemainingQuantityQuery = "UPDATE team_materials 
+                                                         SET remaining_quantity = remaining_quantity - '$usedQuantity' 
+                                                         WHERE id = '$teamMaterialId' AND date_taken = '$dateTaken'";
+
+                        mysqli_query($conn, $insertLogQuery);
+                        mysqli_query($conn, $updateRemainingQuantityQuery);
+                    } else {
+                        // Return an error message if used_quantity is greater than remaining_quantity
+                        echo json_encode(array('status' => 'error', 'message' => 'الكمية المستخدمة أكبر من المستلمة: ' . $materialName));
+                        continue; // Skip to the next element in the loop
+                    }
+                } else {
+                    // Handle query error
+                    echo json_encode(array('status' => 'error', 'message' => 'Error querying remaining quantity'));
+                    return;
+                }
+            } else {
+                // If used_quantity is 0, skip to the next element
+                continue;
+            }
         }
+
+        echo json_encode(array('status' => 'success', 'message' => 'Log added successfully'));
     } else {
         echo json_encode(array('status' => 'error', 'message' => 'Incomplete parameters'));
     }
-
 }
 
 // Function to update a material
@@ -73,17 +100,33 @@ function updateMaterial()
 function viewMaterials()
 {
     global $conn;
-    $id=$_POST['team_id'];
-    $sql = "SELECT tm.material_id, tm.date_taken, tm.quantity, tm. transaction_type, m.name AS material_name, m.quantity AS stock_quantity
+    $id = $_POST['team_id'];
+
+    $sql = "
+        SELECT 
+            m.id,
+            m.name AS material_name,
+            m.quantity AS stock_quantity,
+            tm.quantity AS team_material_quantity,
+            mul.used_quantity,
+            tm.remaining_quantity,
+            tm.date_taken,
+            mul.date_used
+            
         FROM team_materials tm
         INNER JOIN materials m ON tm.material_id = m.id
-        WHERE tm.team_id = $id";
-    $result = $conn->query($sql);
+        LEFT JOIN material_usage_logs mul ON tm.id = mul.team_material_id
+        WHERE tm.team_id = $id
+    ";
 
+    $result = $conn->query($sql);
+//    var_dump($result);die();die
     if ($result->num_rows > 0) {
         $materials = array();
         while ($row = $result->fetch_assoc()) {
-            $materials[] = $row;
+            $materialName = $row['material_name'];
+            unset($row['material_name']); // Remove redundant material_name from the row
+            $materials[$materialName][] = $row;
         }
 
         echo json_encode(array('status' => 'success', 'message' => 'Team Materials retrieved successfully', 'data' => $materials));

@@ -25,9 +25,9 @@ function addTeamMaterialsAndUpdateStock()
                 $date_taken = $_POST['date_taken'];
                 $transaction_type = $_POST['transaction_type'];
 
-                // Insert into team_materials
-                $sql_team_materials = "INSERT INTO team_materials (team_id, material_id, quantity, date_taken, transaction_type) 
-                                    VALUES ($team_id, $material_id, $quantity_taken, '$date_taken', '$transaction_type')";
+
+                $sql_team_materials = "INSERT INTO team_materials (team_id, material_id, quantity, date_taken, transaction_type, remaining_quantity) 
+                                    VALUES ($team_id, $material_id, $quantity_taken, '$date_taken', '$transaction_type',$quantity_taken)";
 
 
                 // Update stock
